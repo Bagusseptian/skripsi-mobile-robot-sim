@@ -1,0 +1,355 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="exploration_robot">
+
+  <!-- ================= PROPERTIES ================= -->
+  <!-- Dimensi dan massa terinspirasi ROSbot (Bagian 4 Dokumen Perencanaan) -->
+  <xacro:property name="chassis_len" value="0.36"/>
+  <xacro:property name="chassis_width" value="0.26"/>
+  <xacro:property name="chassis_height" value="0.10"/>
+  <xacro:property name="chassis_mass" value="3.5"/>
+
+  <xacro:property name="wheel_radius" value="0.05"/>
+  <xacro:property name="wheel_width" value="0.04"/>
+  <xacro:property name="wheel_mass" value="0.4"/>
+  <xacro:property name="wheel_x_offset" value="0.11"/>
+  <xacro:property name="wheel_y_offset" value="0.15"/>
+
+  <!-- ================= BASE LINK & FOOTPRINT ================= -->
+  <link name="base_footprint"/>
+
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 ${chassis_height/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${chassis_len} ${chassis_width} ${chassis_height}"/>
+      </geometry>
+      <material name="chassis_mat">
+        <color rgba="0.15 0.25 0.35 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${chassis_height/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${chassis_len} ${chassis_width} ${chassis_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 ${chassis_height/2}" rpy="0 0 0"/>
+      <mass value="${chassis_mass}"/>
+      <inertia ixx="0.022" ixy="0" ixz="0" iyy="0.040" iyz="0" izz="0.057"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="base_link">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+  <!-- ================= WHEEL MACRO ================= -->
+  <xacro:macro name="wheel" params="prefix x_reflect y_reflect">
+    <link name="${prefix}_wheel">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <material name="black">
+          <color rgba="0.05 0.05 0.05 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${wheel_mass}"/>
+        <inertia ixx="0.0003" ixy="0" ixz="0" iyy="0.0003" iyz="0" izz="0.0005"/>
+      </inertial>
+    </link>
+
+    <joint name="${prefix}_wheel_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="${prefix}_wheel"/>
+      <origin xyz="${x_reflect * wheel_x_offset} ${y_reflect * wheel_y_offset} 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+
+    <gazebo reference="${prefix}_wheel">
+      <material>Gazebo/Black</material>
+      <mu1>0.6</mu1>
+      <mu2>0.6</mu2>
+      <kp>1000000.0</kp>
+      <kd>10.0</kd>
+      <minDepth>0.001</minDepth>
+      <maxVel>0.1</maxVel>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:wheel prefix="fl" x_reflect="1" y_reflect="1"/>
+  <xacro:wheel prefix="fr" x_reflect="1" y_reflect="-1"/>
+  <xacro:wheel prefix="rl" x_reflect="-1" y_reflect="1"/>
+  <xacro:wheel prefix="rr" x_reflect="-1" y_reflect="-1"/>
+
+  <!-- ================= SENSOR 1: RPLIDAR A1 (360 LIDAR) ================= -->
+  <link name="laser_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.04" length="0.04"/>
+      </geometry>
+      <material name="red">
+        <color rgba="0.8 0.1 0.1 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.04" length="0.04"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.17"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <joint name="laser_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="laser_link"/>
+    <origin xyz="0.08 0 ${chassis_height + 0.03}" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="laser_link">
+    <material>Gazebo/Red</material>
+    <sensor type="ray" name="rplidar_a1">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>10.0</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159265</min_angle>
+            <max_angle>3.14159265</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.15</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <!-- Derau Gaussian realistis sesuai Bagian 4 -->
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <remapping>~/out:=scan</remapping>
+        </ros>
+        <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>laser_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ================= SENSOR 2: ORBBEC ASTRA PRO (RGB-D) ================= -->
+  <link name="camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.04 0.165 0.03"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.1 0.1 0.1 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.04 0.165 0.03"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.3"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="${chassis_len/2 - 0.01} 0 ${chassis_height - 0.01}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Optical frame untuk konvensi ROS REP 103 (Z maju, X kanan, Y bawah) -->
+  <link name="camera_depth_optical_frame"/>
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_depth_optical_frame"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+  </joint>
+
+  <gazebo reference="camera_link">
+    <material>Gazebo/Black</material>
+    <sensor type="depth" name="astra_pro">
+      <update_rate>30.0</update_rate>
+      <camera>
+        <!-- Horizontal FOV 87 derajat = 1.5184 rad sesuai Bagian 4 -->
+        <horizontal_fov>1.518436</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <!-- Jangkauan depth 0.3 s.d 6.0 m -->
+          <near>0.3</near>
+          <far>6.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.005</stddev>
+        </noise>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <ros>
+          <remapping>camera/image_raw:=camera/image_raw</remapping>
+          <remapping>camera/depth/image_raw:=camera/depth/image_raw</remapping>
+          <remapping>camera/camera_info:=camera/camera_info</remapping>
+          <remapping>camera/depth/camera_info:=camera/depth/camera_info</remapping>
+          <remapping>camera/points:=camera/points</remapping>
+        </ros>
+        <camera_name>camera</camera_name>
+        <frame_name>camera_depth_optical_frame</frame_name>
+        <hack_baseline>0.075</hack_baseline>
+        <min_depth>0.3</min_depth>
+        <max_depth>6.0</max_depth>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ================= SENSOR 3: IMU (6/9 SUMBU DENGAN DERAU REALISTIS) ================= -->
+  <link name="imu_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.02 0.02 0.008"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0.1 0.2 0.8 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.02 0.02 0.008"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 ${chassis_height/2}" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="imu_link">
+    <material>Gazebo/Blue</material>
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100.0</update_rate>
+      <visualize>false</visualize>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+      <plugin name="imu_controller" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <namespace>/</namespace>
+          <remapping>~/out:=imu/data</remapping>
+        </ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        <frame_name>imu_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ================= 4WD SKID-STEER GAZEBO CONTROLLER ================= -->
+  <gazebo>
+    <plugin name="skid_steer_drive" filename="libgazebo_ros_diff_drive.so">
+      <ros>
+        <namespace>/</namespace>
+        <remapping>cmd_vel:=cmd_vel_pid</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+
+      <!-- 4 Wheels configured as 2 pairs -->
+      <num_wheel_pairs>2</num_wheel_pairs>
+      
+      <!-- Front Pair -->
+      <left_joint>fl_wheel_joint</left_joint>
+      <right_joint>fr_wheel_joint</right_joint>
+      <wheel_separation>0.33</wheel_separation>
+      <wheel_diameter>${wheel_radius * 2}</wheel_diameter>
+
+      <!-- Rear Pair -->
+      <left_joint>rl_wheel_joint</left_joint>
+      <right_joint>rr_wheel_joint</right_joint>
+      <wheel_separation>0.33</wheel_separation>
+      <wheel_diameter>${wheel_radius * 2}</wheel_diameter>
+
+      <max_wheel_torque>25.0</max_wheel_torque>
+      <max_wheel_acceleration>2.5</max_wheel_acceleration>
+
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+      <publish_wheel_tf>false</publish_wheel_tf>
+
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+      <!-- Menambahkan sedikit covariance untuk merefleksikan slip encoder -->
+      <covariance_x>0.001</covariance_x>
+      <covariance_y>0.001</covariance_y>
+      <covariance_yaw>0.01</covariance_yaw>
+    </plugin>
+  </gazebo>
+
+  <!-- ================= GROUND TRUTH POSE PUBLISHER (UNTUK EVALUASI ATE) ================= -->
+  <!-- Menyediakan ground truth pose absolut dari simulator Gazebo (Bagian 7 Dokumen) -->
+  <gazebo>
+    <plugin name="ground_truth_p3d" filename="libgazebo_ros_p3d.so">
+      <ros>
+        <namespace>/</namespace>
+        <remapping>odom:=ground_truth/odom</remapping>
+      </ros>
+      <body_name>base_footprint</body_name>
+      <frame_name>world</frame_name>
+      <update_rate>30.0</update_rate>
+      <xyz_offset>0 0 0</xyz_offset>
+      <rpy_offset>0 0 0</rpy_offset>
+      <gaussian_noise>0.0</gaussian_noise>
+    </plugin>
+  </gazebo>
+
+</robot>

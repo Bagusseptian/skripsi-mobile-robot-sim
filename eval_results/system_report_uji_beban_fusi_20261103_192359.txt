@@ -1,0 +1,20 @@
+
+============================================================
+           RINGKASAN BEBAN KOMPUTASI SISTEM
+============================================================
+Eksperimen              : uji_beban_fusi
+Jumlah Sampel           : 15 detik
+Rata-rata CPU Total     : 20.11%
+
+Beban Node SLAM (uji_beban_fusi):
+  - Rata-rata Penggunaan CPU : 61.65%
+  - Beban Puncak (Peak) CPU  : 96.30%
+  - Rata-rata RAM Digunakan  : 1004.45 MB
+  - Beban Puncak (Peak) RAM  : 1011.96 MB
+
+Beban Simulator Gazebo:
+  - Rata-rata CPU Gazebo     : 108.15%
+  - Rata-rata RAM Gazebo     : 910.91 MB
+
+File Data Lengkap       : /home/sugab/skripsi_ws/eval_results/system_load_uji_beban_fusi_20261103_192359.csv
+============================================================

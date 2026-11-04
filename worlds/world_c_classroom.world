@@ -1,0 +1,297 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="world_c_classroom">
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- ================= DINDING RUANG KELAS/LAB (12m x 10m x 1.5m) ================= -->
+    <model name="class_north">
+      <static>true</static>
+      <pose>0 5.0 0.75 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>12.2 0.2 1.5</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>12.2 0.2 1.5</size></box></geometry>
+          <material><ambient>0.85 0.85 0.9 1</ambient><diffuse>0.85 0.85 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="class_south">
+      <static>true</static>
+      <pose>0 -5.0 0.75 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>12.2 0.2 1.5</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>12.2 0.2 1.5</size></box></geometry>
+          <material><ambient>0.85 0.85 0.9 1</ambient><diffuse>0.85 0.85 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="class_east">
+      <static>true</static>
+      <pose>6.0 0 0.75 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.2 10.0 1.5</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.2 10.0 1.5</size></box></geometry>
+          <material><ambient>0.85 0.85 0.9 1</ambient><diffuse>0.85 0.85 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="class_west">
+      <static>true</static>
+      <pose>-6.0 0 0.75 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.2 10.0 1.5</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.2 10.0 1.5</size></box></geometry>
+          <material><ambient>0.85 0.85 0.9 1</ambient><diffuse>0.85 0.85 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================= FITUR VISUAL DINDING (POSTER/PAPAN TULIS) ================= -->
+    <!-- Papan Tulis Putih di Dinding Utara (Depan Kelas) -->
+    <model name="whiteboard">
+      <static>true</static>
+      <pose>0 4.88 0.9 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>3.5 0.04 1.0</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>3.5 0.04 1.0</size></box></geometry>
+          <material><ambient>0.98 0.98 0.98 1</ambient><diffuse>0.98 0.98 0.98 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Poster Berwarna di Dinding Timur (Fitur Visual ORB Kaya) -->
+    <model name="poster_east_1">
+      <static>true</static>
+      <pose>5.88 2.5 0.9 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box><size>0.04 1.6 1.0</size></box></geometry>
+          <material><ambient>0.9 0.2 0.2 1</ambient><diffuse>0.9 0.2 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="poster_east_2">
+      <static>true</static>
+      <pose>5.88 -2.5 0.9 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box><size>0.04 1.6 1.0</size></box></geometry>
+          <material><ambient>0.1 0.7 0.9 1</ambient><diffuse>0.1 0.7 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Poster Berwarna di Dinding Barat -->
+    <model name="poster_west_1">
+      <static>true</static>
+      <pose>-5.88 2.5 0.9 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box><size>0.04 1.6 1.0</size></box></geometry>
+          <material><ambient>0.9 0.8 0.1 1</ambient><diffuse>0.9 0.8 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="poster_west_2">
+      <static>true</static>
+      <pose>-5.88 -2.5 0.9 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box><size>0.04 1.6 1.0</size></box></geometry>
+          <material><ambient>0.3 0.8 0.3 1</ambient><diffuse>0.3 0.8 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================= AREA MEJA DOSEN / INSTRUKTUR ================= -->
+    <model name="lecturer_desk">
+      <static>true</static>
+      <pose>2.5 3.5 0.38 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>1.6 0.8 0.76</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>1.6 0.8 0.76</size></box></geometry>
+          <material><ambient>0.4 0.25 0.1 1</ambient><diffuse>0.4 0.25 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Podium Dosen -->
+    <model name="podium">
+      <static>true</static>
+      <pose>-2.5 3.5 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.6 0.6 1.0</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.6 0.6 1.0</size></box></geometry>
+          <material><ambient>0.3 0.3 0.35 1</ambient><diffuse>0.3 0.3 0.35 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================= BARISAN MEJA PRAKTIKUM MAHASISWA ================= -->
+    <!-- Baris 1 - Meja Kiri -->
+    <model name="desk_row1_left">
+      <static>true</static>
+      <pose>-2.5 1.0 0.38 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>2.2 0.9 0.76</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>2.2 0.9 0.76</size></box></geometry>
+          <material><ambient>0.7 0.5 0.3 1</ambient><diffuse>0.7 0.5 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Monitor Komputer di Meja Kiri 1 -->
+    <model name="monitor_r1_l">
+      <static>true</static>
+      <pose>-2.5 1.15 0.95 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.6 0.1 0.4</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.6 0.1 0.4</size></box></geometry>
+          <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Baris 1 - Meja Kanan -->
+    <model name="desk_row1_right">
+      <static>true</static>
+      <pose>2.5 1.0 0.38 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>2.2 0.9 0.76</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>2.2 0.9 0.76</size></box></geometry>
+          <material><ambient>0.7 0.5 0.3 1</ambient><diffuse>0.7 0.5 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Monitor Komputer di Meja Kanan 1 -->
+    <model name="monitor_r1_r">
+      <static>true</static>
+      <pose>2.5 1.15 0.95 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.6 0.1 0.4</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.6 0.1 0.4</size></box></geometry>
+          <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Baris 2 - Meja Kiri -->
+    <model name="desk_row2_left">
+      <static>true</static>
+      <pose>-2.5 -1.8 0.38 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>2.2 0.9 0.76</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>2.2 0.9 0.76</size></box></geometry>
+          <material><ambient>0.7 0.5 0.3 1</ambient><diffuse>0.7 0.5 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Monitor Komputer di Meja Kiri 2 -->
+    <model name="monitor_r2_l">
+      <static>true</static>
+      <pose>-2.5 -1.65 0.95 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.6 0.1 0.4</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.6 0.1 0.4</size></box></geometry>
+          <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Baris 2 - Meja Kanan -->
+    <model name="desk_row2_right">
+      <static>true</static>
+      <pose>2.5 -1.8 0.38 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>2.2 0.9 0.76</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>2.2 0.9 0.76</size></box></geometry>
+          <material><ambient>0.7 0.5 0.3 1</ambient><diffuse>0.7 0.5 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Monitor Komputer di Meja Kanan 2 -->
+    <model name="monitor_r2_r">
+      <static>true</static>
+      <pose>2.5 -1.65 0.95 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.6 0.1 0.4</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.6 0.1 0.4</size></box></geometry>
+          <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================= LEMARI & RINTANGAN TAMBAHAN ================= -->
+    <!-- Lemari Laboratorium di Dinding Selatan -->
+    <model name="lab_cabinet_1">
+      <static>true</static>
+      <pose>-4.0 -4.5 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>1.5 0.6 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>1.5 0.6 1.2</size></box></geometry>
+          <material><ambient>0.3 0.3 0.4 1</ambient><diffuse>0.3 0.3 0.4 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="lab_cabinet_2">
+      <static>true</static>
+      <pose>4.0 -4.5 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>1.5 0.6 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>1.5 0.6 1.2</size></box></geometry>
+          <material><ambient>0.3 0.3 0.4 1</ambient><diffuse>0.3 0.3 0.4 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Tempat Sampah Laboratorium di Sudut Kelas Depan Timur -->
+    <model name="recycle_bin">
+      <static>true</static>
+      <pose>4.8 4.2 0.3 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.22</radius><length>0.6</length></cylinder></geometry></collision>
+        <visual name="v">
+          <geometry><cylinder><radius>0.22</radius><length>0.6</length></cylinder></geometry>
+          <material><ambient>0.1 0.6 0.2 1</ambient><diffuse>0.1 0.6 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

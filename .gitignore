@@ -1,0 +1,23 @@
+# ROS 2 & Colcon
+build/
+install/
+log/
+.colcon/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Gazebo & ROS Logs
+*.log
+*.tar.gz
+
+# Editor & OS files
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db

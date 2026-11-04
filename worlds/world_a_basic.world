@@ -1,0 +1,135 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="world_a_basic">
+    <!-- Penerangan Global -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <!-- Bidang Tanah / Lantai -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Pengaturan Fisika Real-Time -->
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- ================= DINDING PEMBATAS RUANGAN (8m x 8m x 1m) ================= -->
+    <!-- Dinding Utara -->
+    <model name="wall_north">
+      <static>true</static>
+      <pose>0 4.0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col">
+          <geometry><box><size>8.2 0.2 1.0</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>8.2 0.2 1.0</size></box></geometry>
+          <material><ambient>0.7 0.7 0.75 1</ambient><diffuse>0.7 0.7 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Dinding Selatan -->
+    <model name="wall_south">
+      <static>true</static>
+      <pose>0 -4.0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col">
+          <geometry><box><size>8.2 0.2 1.0</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>8.2 0.2 1.0</size></box></geometry>
+          <material><ambient>0.7 0.7 0.75 1</ambient><diffuse>0.7 0.7 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Dinding Timur -->
+    <model name="wall_east">
+      <static>true</static>
+      <pose>4.0 0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col">
+          <geometry><box><size>0.2 8.0 1.0</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.2 8.0 1.0</size></box></geometry>
+          <material><ambient>0.7 0.7 0.75 1</ambient><diffuse>0.7 0.7 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Dinding Barat -->
+    <model name="wall_west">
+      <static>true</static>
+      <pose>-4.0 0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col">
+          <geometry><box><size>0.2 8.0 1.0</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.2 8.0 1.0</size></box></geometry>
+          <material><ambient>0.7 0.7 0.75 1</ambient><diffuse>0.7 0.7 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================= RINTANGAN DASAR UNTUK LATIHAN PEMETAAN ================= -->
+    <!-- Rintangan 1: Silinder Pilar Tengah Kiri -->
+    <model name="pillar_cylinder_1">
+      <static>true</static>
+      <pose>-1.5 1.5 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.35</radius><length>1.0</length></cylinder></geometry></collision>
+        <visual name="vis">
+          <geometry><cylinder><radius>0.35</radius><length>1.0</length></cylinder></geometry>
+          <material><ambient>0.2 0.6 0.8 1</ambient><diffuse>0.2 0.6 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Rintangan 2: Kotak Meja Tengah Kanan -->
+    <model name="obstacle_box_1">
+      <static>true</static>
+      <pose>1.8 1.2 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.0 1.4 0.8</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>1.0 1.4 0.8</size></box></geometry>
+          <material><ambient>0.85 0.5 0.2 1</ambient><diffuse>0.85 0.5 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Rintangan 3: Silinder Pilar Bawah Kanan -->
+    <model name="pillar_cylinder_2">
+      <static>true</static>
+      <pose>1.5 -1.8 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.3</radius><length>1.0</length></cylinder></geometry></collision>
+        <visual name="vis">
+          <geometry><cylinder><radius>0.3</radius><length>1.0</length></cylinder></geometry>
+          <material><ambient>0.3 0.75 0.3 1</ambient><diffuse>0.3 0.75 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Rintangan 4: Kotak Partisi Bawah Kiri -->
+    <model name="obstacle_box_2">
+      <static>true</static>
+      <pose>-1.8 -1.5 0.35 0 0 0.5</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.6 1.2 0.7</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>0.6 1.2 0.7</size></box></geometry>
+          <material><ambient>0.8 0.2 0.2 1</ambient><diffuse>0.8 0.2 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

@@ -1,0 +1,177 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="world_b_corridor">
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- ================= DINDING KELILING LUAR (14m x 10m x 1.2m) ================= -->
+    <!-- Dinding Luar Utara -->
+    <model name="outer_north">
+      <static>true</static>
+      <pose>0 5.0 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>14.2 0.2 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>14.2 0.2 1.2</size></box></geometry>
+          <material><ambient>0.6 0.6 0.65 1</ambient><diffuse>0.6 0.6 0.65 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Dinding Luar Selatan -->
+    <model name="outer_south">
+      <static>true</static>
+      <pose>0 -5.0 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>14.2 0.2 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>14.2 0.2 1.2</size></box></geometry>
+          <material><ambient>0.6 0.6 0.65 1</ambient><diffuse>0.6 0.6 0.65 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Dinding Luar Timur -->
+    <model name="outer_east">
+      <static>true</static>
+      <pose>7.0 0 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.2 10.0 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.2 10.0 1.2</size></box></geometry>
+          <material><ambient>0.6 0.6 0.65 1</ambient><diffuse>0.6 0.6 0.65 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Dinding Luar Barat -->
+    <model name="outer_west">
+      <static>true</static>
+      <pose>-7.0 0 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.2 10.0 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.2 10.0 1.2</size></box></geometry>
+          <material><ambient>0.6 0.6 0.65 1</ambient><diffuse>0.6 0.6 0.65 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================= PARTISI LORONG DAN RUANGAN (CORRIDOR CIRCUITS) ================= -->
+    <!-- Blok Tengah (Membentuk lorong keliling dengan lebar ~2m) -->
+    <!-- Dinding Tengah Bagian Bawah -->
+    <model name="inner_wall_south">
+      <static>true</static>
+      <pose>0 -2.8 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>9.6 0.2 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>9.6 0.2 1.2</size></box></geometry>
+          <material><ambient>0.7 0.5 0.3 1</ambient><diffuse>0.7 0.5 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Dinding Tengah Bagian Atas -->
+    <model name="inner_wall_north">
+      <static>true</static>
+      <pose>-0.5 2.8 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>8.6 0.2 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>8.6 0.2 1.2</size></box></geometry>
+          <material><ambient>0.7 0.5 0.3 1</ambient><diffuse>0.7 0.5 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Dinding Penyekat Vertikal Tengah Kiri -->
+    <model name="inner_wall_mid_west">
+      <static>true</static>
+      <pose>-4.8 0 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.2 5.6 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.2 5.6 1.2</size></box></geometry>
+          <material><ambient>0.7 0.5 0.3 1</ambient><diffuse>0.7 0.5 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Dinding Penyekat Vertikal Tengah Kanan (dengan Celah Pintu) -->
+    <model name="inner_wall_mid_east_1">
+      <static>true</static>
+      <pose>4.8 1.8 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.2 2.0 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.2 2.0 1.2</size></box></geometry>
+          <material><ambient>0.7 0.5 0.3 1</ambient><diffuse>0.7 0.5 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="inner_wall_mid_east_2">
+      <static>true</static>
+      <pose>4.8 -1.8 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.2 2.0 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.2 2.0 1.2</size></box></geometry>
+          <material><ambient>0.7 0.5 0.3 1</ambient><diffuse>0.7 0.5 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <!-- Celah pintu selebar 1.6m berada di X=4.8, Y=0 -->
+
+    <!-- Pilar Tengah Ruang Dalam -->
+    <model name="central_pillar">
+      <static>true</static>
+      <pose>0 0 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>1.2 1.2 1.2</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>1.2 1.2 1.2</size></box></geometry>
+          <material><ambient>0.2 0.4 0.7 1</ambient><diffuse>0.2 0.4 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Pilar Lorong Barat -->
+    <model name="corridor_pillar_west">
+      <static>true</static>
+      <pose>-5.9 0 0.6 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.25</radius><length>1.2</length></cylinder></geometry></collision>
+        <visual name="v">
+          <geometry><cylinder><radius>0.25</radius><length>1.2</length></cylinder></geometry>
+          <material><ambient>0.3 0.7 0.3 1</ambient><diffuse>0.3 0.7 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Rintangan Statis di Lorong Timur (Kotak Pengujian Navigasi) -->
+    <model name="corridor_obstacle_east">
+      <static>true</static>
+      <pose>5.9 0 0.3 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.6 0.6 0.6</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.6 0.6 0.6</size></box></geometry>
+          <material><ambient>0.8 0.2 0.2 1</ambient><diffuse>0.8 0.2 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

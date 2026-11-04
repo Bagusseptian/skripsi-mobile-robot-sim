@@ -1,0 +1,5 @@
+goal_index,goal_name,x,y,status,duration_sec
+1,Goal 1 (Lorong Timur),5.8,0.0,FAILED,40.47
+2,Goal 2 (Lorong Utara),0.0,3.8,FAILED,106.49
+3,Goal 3 (Lorong Barat),-5.8,0.0,FAILED,26.85
+4,Goal 4 (Lorong Selatan),0.0,-3.8,SUCCEEDED,165.94

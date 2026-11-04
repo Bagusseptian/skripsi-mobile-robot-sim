@@ -1,0 +1,13 @@
+
+============================================================
+           RINGKASAN EVALUASI NAVIGASI OTONOM
+============================================================
+Eksperimen            : uji_mandiri_live
+Dunia Pengujian       : world_b
+Total Titik Target    : 5
+Titik Berhasil (Goal) : 5
+Tingkat Keberhasilan  : 100.0%
+Rata-rata Waktu Capai : 44.80 detik per goal
+
+File Log CSV          : /home/sugab/skripsi_ws/eval_results/nav_benchmark_uji_mandiri_live_20261104_100917.csv
+============================================================

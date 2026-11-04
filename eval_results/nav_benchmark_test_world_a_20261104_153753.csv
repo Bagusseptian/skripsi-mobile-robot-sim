@@ -1,0 +1,6 @@
+goal_index,goal_name,x,y,status,duration_sec
+1,Goal 1 (Pojok Kanan Depan),2.5,2.5,SUCCEEDED,23.44
+2,Goal 2 (Pojok Kiri Depan),-2.5,2.5,SUCCEEDED,36.66
+3,Goal 3 (Pojok Kiri Belakang),-2.5,-2.5,SUCCEEDED,33.66
+4,Goal 4 (Pojok Kanan Belakang),2.5,-2.5,SUCCEEDED,32.46
+5,Goal 5 (Kembali ke Titik Asal),0.0,0.0,SUCCEEDED,39.67

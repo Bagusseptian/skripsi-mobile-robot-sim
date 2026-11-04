@@ -56,7 +56,7 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/LaserScan
-      Color: 255; 25; 0
+      Color: 0; 255; 100
       Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
@@ -67,8 +67,8 @@ Visualization Manager:
       Position Tolerance: 0.1
       Queue Size: 10
       Selectable: true
-      Size (Pixels): 5
-      Size (m): 0.06
+      Size (Pixels): 4
+      Size (m): 0.035
       Style: Flat Squares
       Topic:
         Depth: 5
@@ -100,8 +100,8 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.03
-      Style: Points
+      Size (m): 0.025
+      Style: Flat Squares
       Topic:
         Depth: 5
         Durability Policy: Volatile

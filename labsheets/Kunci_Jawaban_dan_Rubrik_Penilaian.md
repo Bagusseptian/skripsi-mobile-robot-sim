@@ -81,11 +81,45 @@
 
 ---
 
-## IV. STANDAR RUBRIK PENILAIAN PRAKTIKUM (SKALA 100)
+## IV. KUNCI JAWABAN LABSHEET 4: NAVIGASI OTONOM DAN 3D VOXEL LAYER
 
-| Rentang Nilai | Predikat | Kriteria Deskriptif Kualitatif |
-| :---: | :---: | :--- |
-| **86 - 100** | **Amat Baik (A)** | Mahasiswa menguasai seluruh prosedur mandiri; simulasi Gazebo, SLAM, dan Nav2 berjalan mulus; seluruh tabel pengamatan terisi dengan data riil dan akurat; analisis komparatif mendalam dan mengaitkan konsep teoritis dengan fenomena fisis robotik. |
-| **76 - 85** | **Baik (B)** | Mahasiswa mampu menjalankan simulasi dan menyelesaikan pemetaan serta navigasi dengan sedikit bantuan; tabel pengamatan terisi lengkap; analisis pertanyaan benar secara garis besar namun kurang detail pada aspek matematis/TF. |
-| **60 - 75** | **Cukup (C)** | Mahasiswa mengalami kendala saat konfigurasi atau teleoperasi; peta yang dihasilkan mengalami sedikit cacat/distorsi; pengamatan terisi sebagian; jawaban analisis bersifat dangkal atau sekadar mengulang teori tanpa mengaitkan ke data pengujian. |
-| **< 60** | **Kurang (D/E)** | Mahasiswa tidak mampu menyelesaikan pemetaan atau navigasi; tidak mengisi lembar kerja; jawaban analisis tidak relevan atau tidak mengumpulkan laporan praktikum. |
+### Kunci Pertanyaan Analisis & Diskusi Labsheet 4
+1. **Mengapa keberadaan 3D Voxel Layer sangat krusial di laboratorium komputer?**  
+   *Jawaban:* Meja laboratorium memiliki kolong berketinggian 70 cm dengan permukaan daun meja setinggi pinggang dan monitor komputer di atasnya. Berkas sinar LiDAR 2D setinggi 13 cm hanya melihat kaki meja yang kecil berbentuk silinder/kotak tipis, mengira area di antara kaki-kaki meja adalah jalan kosong terbuka. Akibatnya, robot tanpa 3D Voxel Layer akan mencoba menerobos masuk ke bawah meja dan menabrak rangka atau kabel meja. Voxel Layer memproyeksikan point cloud 3D Orbbec Astra, menandai volume udara di bawah dan setinggi meja sebagai zona bahaya occupied pada local costmap, sehingga robot merencanakan jalur memutar di lorong bebas.
+2. **Pengaruh parameter `inflation_radius` terhadap navigasi lorong sempit:**  
+   *Jawaban:* `inflation_radius` menentukan ketebalan lapisan penyangga keselamatan di sekitar rintangan. Jika diatur terlalu besar ($>0.5\text{ m}$), zona bahaya dari meja kiri dan meja kanan akan saling bertumpuk (*overlap*), menutup total lorong tengah selebar 1.0 m sehingga robot mengira jalan buntu dan membatalkan misi (*aborted*). Sebaliknya, jika diatur terlalu kecil ($<0.2\text{ m}$), batas inflasi lebih kecil dari radius robot fisik (0.22 m), sehingga controller dapat mengarahkan robot terlalu dekat dengan sudut meja dan memicu tabrakan fisik (*collision*) saat berbelok. Nilai optimal $0.35\text{ m}$ memberikan clearance yang pas untuk lorong lab.
+3. **Peran `pid_velocity_controller.py` dalam meredam oversteering:**  
+   *Jawaban:* Pada kinematika skid-steer 4WD di simulator Gazebo, percepatan sudut impulsif dari Nav2 memicu slip gesek dinamik dan osilasi (*hunting behavior*). Node `pid_velocity_controller` mengimplementasikan low-pass filter dan kontrol proporsional-integral pada perintah `/cmd_vel_nav`, membatasi lonjakan akselerasi sudut ($\dot{\omega} \le 0.8\text{ rad/s}^2$) dan memperhalus profil kecepatan saat robot memasuki dan keluar dari tikungan tajam, menghasilkan lintasan mulus tanpa getaran.
+
+---
+
+## V. KUNCI JAWABAN LABSHEET 5: EVALUASI KUANTITATIF ATE DAN BEBAN SISTEM
+
+### Kunci Pertanyaan Analisis & Diskusi Labsheet 5
+1. **Konfigurasi dengan ATE RMSE terkecil dan faktor fisisnya:**  
+   *Jawaban:* Skenario 3 (Fusi Multi-Sensor) menghasilkan nilai ATE RMSE terkecil ($\approx 0.04 - 0.08\text{ m}$), jauh lebih presisi dibandingkan Visual SLAM murni ($\approx 0.25 - 0.45\text{ m}$) dan LiDAR murni ($\approx 0.10 - 0.15\text{ m}$). Keunggulan ini disebabkan oleh mekanisme komplementer: 360° LiDAR mengunci geometri dinding agar odometri tidak mengalami angular drift, sementara kamera RGB-D mengekstrak ratusan visual keypoints untuk mendeteksi loop closure fotometrik yang mengeliminasi akumulasi kesalahan translasi saat robot menyelesaikan sirkuit.
+2. **Penyebab drift besar pada Skenario 2 (RGB-D Saja) di lorong panjang:**  
+   *Jawaban:* Di lorong panjang simetris, dinding samping kiri dan kanan seringkali berwarna monokrom/polos tanpa tekstur warna atau poster. Karena kamera RGB-D hanya memiliki FOV $87^\circ$ ke depan, saat robot melaju lurus di sepanjang lorong, fitur visual yang dapat diekstraksi sangat sedikit dan terkonsentrasi di ujung lorong yang jauh. Estimasi kedalaman pada jarak jauh ($>4\text{ m}$) memiliki varian noise kuadratik ($\sigma_z \propto z^2$), menyebabkan estimasi translasi maju mengalami skala drift (*scale drift*).
+3. **Rekomendasi implementasi pada embedded hardware nyata (Jetson Orin Nano / RPi 5):**  
+   *Jawaban:* Pada perangkat seperti NVIDIA Jetson Orin Nano (6-core ARM CPU, GPU Ampere), Fusi Sensor Penuh dapat dijalankan dengan memanfaatkan akselerasi CUDA pada RTAB-Map dan OpenCV. Namun, jika menggunakan prosesor tanpa GPU bertenaga (seperti Raspberry Pi 4/5), rekomendasi terbaik adalah menurunkan resolusi depth kamera ke $320 \times 240$ pada 15 FPS, atau menggunakan mode 2D LiDAR SLAM (`slam_toolbox`) sebagai estimator posisi utama yang hemat daya, dengan kamera RGB-D dikhususkan sebagai sensor deteksi rintangan 3D lokal di Nav2.
+
+---
+
+## VI. RUBRIK PENILAIAN KOMPREHENSIF TIGA RANAH (STANDAR OBE FT UNY)
+
+### 1. Ranah Psikomotorik / Keterampilan (Bobot 50%)
+* **Skor 41-50:** Mahasiswa terampil mengoperasikan terminal ROS 2, mampu mengatasi kendala sistem mandiri, peta yang dibangun simetris dan tajam tanpa distorsi, navigasi 5 waypoint 100% sukses.
+* **Skor 31-40:** Mahasiswa mampu menjalankan seluruh simulasi dan merekam data dengan panduan minimal asisten; peta memiliki sedikit noise yang tidak mengganggu navigasi.
+* **Skor 21-30:** Mahasiswa membutuhkan bantuan teknis intensif; pemetaan mengalami kegagalan loop closure atau robot terjebak rintangan berulang kali.
+* **Skor < 20:** Mahasiswa tidak mampu menyelesaikan prosedur praktikum.
+
+### 2. Ranah Kognitif / Pengetahuan (Bobot 35%)
+* **Skor 31-35:** Analisis lembar diskusi mendalam, mengaitkan rumus matematis ATE RMSE, matriks TF, dan kinematika skid-steer dengan data empiris pengujian.
+* **Skor 25-30:** Jawaban benar secara konseptual, namun penjelasan matematis atau korelasi dengan log data kurang mendalam.
+* **Skor 18-24:** Jawaban singkat dan bersifat teoritis umum tanpa mengaitkan ke hasil observasi laboratorium.
+* **Skor < 18:** Jawaban salah atau tidak menjawab pertanyaan analisis.
+
+### 3. Ranah Afektif / Sikap Kerja (Bobot 15%)
+* **Skor 13-15:** Disiplin waktu, menjaga kebersihan dan ketertiban laboratorium, menunjukkan etos kerja ilmiah yang jujur dalam mencatat data log numerik tanpa manipulasi.
+* **Skor 10-12:** Tertib dan mengumpulkan laporan tepat waktu, namun kurang proaktif dalam diskusi praktikum.
+* **Skor < 10:** Terlambat mengumpulkan tugas atau melakukan plagiasi data pengamatan teman sekelompok.

@@ -108,7 +108,7 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/LaserScan
-      Color: 255; 25; 25
+      Color: 0; 255; 100
       Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
@@ -119,7 +119,7 @@ Visualization Manager:
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 4
-      Size (m): 0.04
+      Size (m): 0.035
       Style: Flat Squares
       Topic:
         Depth: 5
@@ -186,8 +186,8 @@ Visualization Manager:
           Position Transformer: XYZ
           Selectable: true
           Size (Pixels): 3
-          Size (m): 0.03
-          Style: Points
+          Size (m): 0.025
+          Style: Flat Squares
           Topic:
             Depth: 5
             Durability Policy: Volatile
@@ -202,7 +202,7 @@ Visualization Manager:
       Value: true
     - Class: rviz_common/Group
       Displays:
-        - Alpha: 0.35
+        - Alpha: 0.45
           Class: rviz_default_plugins/Map
           Color Scheme: costmap
           Draw Behind: false

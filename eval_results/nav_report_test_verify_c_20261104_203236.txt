@@ -1,0 +1,13 @@
+
+============================================================
+           RINGKASAN EVALUASI NAVIGASI OTONOM
+============================================================
+Eksperimen            : test_verify_c
+Dunia Pengujian       : world_c
+Total Titik Target    : 5
+Titik Berhasil (Goal) : 5
+Tingkat Keberhasilan  : 100.0%
+Rata-rata Waktu Capai : 37.76 detik per goal
+
+File Log CSV          : /home/sugab/skripsi_ws/eval_results/nav_benchmark_test_verify_c_20261104_203236.csv
+============================================================

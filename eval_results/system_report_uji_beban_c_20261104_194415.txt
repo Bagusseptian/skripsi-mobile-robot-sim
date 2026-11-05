@@ -1,0 +1,20 @@
+
+============================================================
+           RINGKASAN BEBAN KOMPUTASI SISTEM
+============================================================
+Eksperimen              : uji_beban_c
+Jumlah Sampel           : 60 detik
+Rata-rata CPU Total     : 22.78%
+
+Beban Node SLAM (uji_beban_c):
+  - Rata-rata Penggunaan CPU : 66.63%
+  - Beban Puncak (Peak) CPU  : 97.10%
+  - Rata-rata RAM Digunakan  : 2272.93 MB
+  - Beban Puncak (Peak) RAM  : 2282.10 MB
+
+Beban Simulator Gazebo:
+  - Rata-rata CPU Gazebo     : 136.06%
+  - Rata-rata RAM Gazebo     : 919.02 MB
+
+File Data Lengkap       : /home/sugab/skripsi_ws/eval_results/system_load_uji_beban_c_20261104_194415.csv
+============================================================

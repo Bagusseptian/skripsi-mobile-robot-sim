@@ -1,0 +1,14 @@
+
+============================================================
+       HASIL EVALUASI AKURASI LOKALISASI SLAM (ATE)
+============================================================
+Eksperimen            : uji_fusi
+Jumlah Sampel         : 593
+Metrik Translasi:
+  - Absolute Error RMSE : 0.0000 meter
+  - Mean Error          : 0.0000 meter
+  - Max Error           : 0.0000 meter
+  - Standard Deviation  : 0.0000 meter
+File Data CSV         : /home/sugab/skripsi_ws/eval_results/ate_data_uji_fusi_20261104_202452.csv
+File Gambar Plot      : /home/sugab/skripsi_ws/eval_results/ate_trajectory_uji_fusi_20261104_202452.png
+============================================================

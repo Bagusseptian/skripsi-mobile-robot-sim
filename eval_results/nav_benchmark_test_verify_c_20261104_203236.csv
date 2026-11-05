@@ -1,0 +1,6 @@
+goal_index,goal_name,x,y,status,duration_sec
+1,Goal 1 (Depan Papan Tulis),0.0,3.0,SUCCEEDED,19.31
+2,Goal 2 (Meja Lab Kanan 1),3.5,1.0,SUCCEEDED,46.88
+3,Goal 3 (Lorong Belakang Kanan),3.5,-2.8,SUCCEEDED,28.25
+4,Goal 4 (Lorong Belakang Kiri),-3.5,-2.8,SUCCEEDED,50.48
+5,Goal 5 (Kembali Depan Kelas),0.0,1.2,SUCCEEDED,43.88

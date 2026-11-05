@@ -22,6 +22,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Twist
 import tf2_ros
 
 try:
@@ -33,14 +34,19 @@ except ImportError:
     HAS_MATPLOTLIB = False
 
 class ATEEvaluator(Node):
-    def __init__(self, mode='tf', est_topic='/odom', output_dir='eval_results'):
+    def __init__(self, mode='tf', est_topic='/odom', output_dir='eval_results', auto_drive=True):
         super().__init__('benchmark_ate_node')
         self.mode = mode
         self.output_dir = output_dir
+        self.auto_drive = auto_drive
         os.makedirs(self.output_dir, exist_ok=True)
 
         self.gt_poses = []   # list of (t, x, y, yaw)
         self.est_poses = []  # list of (t, x, y, yaw)
+
+        # Publisher pergerakan robot otonom selama benchmark
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.motion_step = 0
 
         # Ground truth subscriber dari Gazebo P3D
         self.create_subscription(Odometry, '/ground_truth/odom', self.gt_callback, 10)
@@ -54,6 +60,9 @@ class ATEEvaluator(Node):
             self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
             self.timer = self.create_timer(0.1, self.tf_timer_callback) # 10 Hz sampling
             self.get_logger().info("[ATE Evaluator] Mode: TF (map -> base_footprint) vs Ground Truth")
+
+        if self.auto_drive:
+            self.get_logger().info("[ATE Evaluator] Auto-Drive: AKTIF (Robot akan bergerak otomatis membentuk sirkuit)")
 
         self.start_time = self.get_clock().now()
 
@@ -97,6 +106,23 @@ class ATEEvaluator(Node):
             self.est_poses.append((t, pos.x, pos.y, yaw))
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             pass
+
+        # Pergerakan otonom sirkuit evaluasi
+        if self.auto_drive:
+            self.motion_step += 1
+            cycle = (self.motion_step // 10) % 8  # Siklus 8 detik (5 detik maju, 3 detik belok)
+            cmd = Twist()
+            if cycle < 5:
+                cmd.linear.x = 0.22
+                cmd.angular.z = 0.0
+            else:
+                cmd.linear.x = 0.08
+                cmd.angular.z = 0.40
+            self.cmd_pub.publish(cmd)
+
+    def stop_robot(self):
+        cmd = Twist()
+        self.cmd_pub.publish(cmd)
 
     def compute_and_save_results(self, exp_name='slam_test'):
         if len(self.gt_poses) < 5:
@@ -171,14 +197,18 @@ def main():
     parser.add_argument('--topic', default='/odom', help='Topik estimasi jika mode=topic')
     parser.add_argument('--duration', type=int, default=60, help='Durasi perekaman data (detik)')
     parser.add_argument('--output-dir', default='/home/sugab/skripsi_ws/eval_results', help='Direktori output')
+    parser.add_argument('--manual', action='store_true', help='Nonaktifkan auto-drive (gunakan teleop manual)')
 
     args = parser.parse_args()
 
     rclpy.init()
-    node = ATEEvaluator(mode=args.mode, est_topic=args.topic, output_dir=args.output_dir)
+    node = ATEEvaluator(mode=args.mode, est_topic=args.topic, output_dir=args.output_dir, auto_drive=(not args.manual))
 
     print(f"\n[ATE Benchmark] Perekaman dimulai selama {args.duration} detik...")
-    print("Gerakkan robot memakai teleop_wasd atau Nav2...")
+    if not args.manual:
+        print("[ATE Benchmark] Robot bergerak mandiri (Auto-Drive) melintasi arena...")
+    else:
+        print("[ATE Benchmark] Mode manual: Gerakkan robot memakai teleop_wasd atau Nav2...")
     
     start_t = time.time()
     try:
@@ -190,6 +220,7 @@ def main():
         print("\nPerekaman dihentikan lebih awal oleh pengguna.")
 
     print("\nMenghitung metrik ATE dan menyimpan hasil...")
+    node.stop_robot()
     node.compute_and_save_results(exp_name=args.name)
     node.destroy_node()
     rclpy.shutdown()

@@ -25,9 +25,10 @@ install(
     scripts/benchmark_system.py
     scripts/nav2_goal_tester.py
     scripts/pid_velocity_controller.py
-    scripts/dummy_robot.py
-    scripts/webcam_rgbd_node.py
     scripts/intelligent_explorer.py
+    scripts/rgbd_spatial_interactive.py
+    scripts/autonomous_wanderer.py
+    scripts/map_saver_unified.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

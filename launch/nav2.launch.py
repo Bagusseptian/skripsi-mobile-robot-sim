@@ -64,6 +64,16 @@ def launch_setup(context, *args, **kwargs):
     )
     actions.append(rviz_cmd)
 
+    # Node: Interaktif Penginderaan Spasial 3D Kamera RGB-D (Publish Point & Obstacle Inspector)
+    spatial_node = Node(
+        package='robot_sim',
+        executable='rgbd_spatial_interactive.py',
+        name='rgbd_spatial_interactive',
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time == 'true'}]
+    )
+    actions.append(spatial_node)
+
     return actions
 
 def generate_launch_description():

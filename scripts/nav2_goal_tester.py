@@ -40,11 +40,11 @@ WAYPOINTS_WORLD_B = [
 
 # Titik uji default untuk World C (Classroom 12x10m)
 WAYPOINTS_WORLD_C = [
-    {'name': 'Goal 1 (Depan Papan Tulis)', 'x': 0.0, 'y': 3.5, 'yaw': 1.57},
-    {'name': 'Goal 2 (Meja Lab Kanan 1)',   'x': 4.2, 'y': 1.0, 'yaw': 0.0},
-    {'name': 'Goal 3 (Lorong Belakang Kanan)','x': 4.2, 'y': -3.5, 'yaw': -1.57},
-    {'name': 'Goal 4 (Lorong Belakang Kiri)', 'x': -4.2, 'y': -3.5, 'yaw': 3.14},
-    {'name': 'Goal 5 (Kembali Depan Kelas)', 'x': 0.0, 'y': 1.5, 'yaw': 1.57}
+    {'name': 'Goal 1 (Depan Papan Tulis)', 'x': 0.0, 'y': 3.0, 'yaw': 1.57},
+    {'name': 'Goal 2 (Meja Lab Kanan 1)',   'x': 3.5, 'y': 1.0, 'yaw': 0.0},
+    {'name': 'Goal 3 (Lorong Belakang Kanan)','x': 3.5, 'y': -2.8, 'yaw': -1.57},
+    {'name': 'Goal 4 (Lorong Belakang Kiri)', 'x': -3.5, 'y': -2.8, 'yaw': 3.14},
+    {'name': 'Goal 5 (Kembali Depan Kelas)', 'x': 0.0, 'y': 1.2, 'yaw': 1.57}
 ]
 
 def run_navigation_test(world='world_a', exp_name='nav2_eval', localizer='bt_navigator', output_dir='/home/sugab/skripsi_ws/eval_results'):
@@ -91,6 +91,12 @@ def run_navigation_test(world='world_a', exp_name='nav2_eval', localizer='bt_nav
     for idx, wp in enumerate(waypoints, start=1):
         print(f"\n---> Mengirim Target {idx}/{total_goals}: {wp['name']} (x={wp['x']}, y={wp['y']})")
         
+        try:
+            navigator.clearAllCostmaps()
+            time.sleep(0.3)
+        except Exception:
+            pass
+
         goal_pose = PoseStamped()
         goal_pose.header.frame_id = 'map'
         goal_pose.header.stamp = navigator.get_clock().now().to_msg()

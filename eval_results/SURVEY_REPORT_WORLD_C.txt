@@ -10,9 +10,9 @@
 Pengujian mandiri menggunakan algoritma *Smooth Continuous Gap-Seeking* menghasilkan penjelajahan menyeluruh pada ruang kelas tanpa osilasi lorong dan tanpa perputaran berulang. Fusi sensor **RPLiDAR A1 360°** dan **Kamera Kedalaman Astra RGB-D** berhasil merekonstruksi lingkungan 2D dan 3D secara komprehensif.
 
 * **Status Rekonstruksi**: **BERHASIL (High Fidelity)**
-* **Total Titik 3D Valid**: **59,101 titik** (Pembersihan derau menggunakan CloudCompare SOR Filter $k=20, \sigma=2.0$).
-* **Tingkat Cakupan Area (Coverage)**: **100.0%** dari area navigasi bersih.
-* **Rata-rata Error Dimensi**: **19.91%** terhadap ukuran *Ground Truth* Gazebo.
+* **Total Titik 3D Valid**: **66,734 titik** (Pembersihan derau menggunakan CloudCompare SOR Filter $k=20, \sigma=2.0$).
+* **Tingkat Cakupan Area (Coverage)**: **80.3%** dari area navigasi bersih.
+* **Rata-rata Error Dimensi**: **19.80%** terhadap ukuran *Ground Truth* Gazebo.
 
 ---
 
@@ -21,12 +21,12 @@ Pengolahan data 2D diturunkan dari pesan `/map` Nav2 standar biner dengan resolu
 
 | Parameter Kartografi | Nilai Terukur | Satuan / Keterangan |
 | :--- | :--- | :--- |
-| **Dimensi Grid Peta** | 261 × 221 | piksel |
-| **Rentang Spasial Nyata** | 13.05 × 11.05 | meter (X × Y) |
-| **Luas Area Navigasi Bebas (Free Space)** | **103.10** | $\text{m}^2$ (Area aman dilalui robot) |
-| **Luas Jejak Rintangan (Obstacle Footprint)** | **5.24** | $\text{m}^2$ (Meja kelas + Dinding keliling) |
+| **Dimensi Grid Peta** | 261 × 222 | piksel |
+| **Rentang Spasial Nyata** | 13.05 × 11.10 | meter (X × Y) |
+| **Luas Area Navigasi Bebas (Free Space)** | **74.14** | $\text{m}^2$ (Area aman dilalui robot) |
+| **Luas Jejak Rintangan (Obstacle Footprint)** | **4.43** | $\text{m}^2$ (Meja kelas + Dinding keliling) |
 | **Jumlah Klaster Rintangan Terdeteksi** | **12** | Klaster terpisah (6 Meja + 4 Dinding) |
-| **Tingkat Kelengkapan Ruangan** | **100.0%** | Dibandingkan luas bebas ideal ($92.3\text{ m}^2$) |
+| **Tingkat Kelengkapan Ruangan** | **80.3%** | Dibandingkan luas bebas ideal ($92.3\text{ m}^2$) |
 | **Format Artefak Tersimpan** | `.pgm` (P5 Binary) & `.yaml` | Kompatibel Nav2 Map Server |
 
 *Visualisasi 2D resolusi tinggi tersimpan pada berkas: `peta_2d_advanced_survey.png`.*
@@ -38,10 +38,10 @@ Data diekstraksi dari database RTAB-Map dengan proses *Voxel Grid Filtering* ($1
 
 | Parameter Rekonstruksi 3D | Nilai Pengukuran | Catatan Validasi |
 | :--- | :--- | :--- |
-| **Jumlah Titik Awan (Point Count)** | **59,101 titik** | 100% Valid (Bebas nilai NaN/Inf) |
-| **Ukuran Berkas PLY** | **10.37 MB** | Format Binary Little-Endian |
-| **Kerapatan Titik Rata-rata** | **411 titik/$\text{m}^2$** | Kerapatan sangat tinggi untuk SLAM |
-| **Volume Ruang Bounding Box** | **258.59 $\text{m}^3$** | Dimensi kotak pembungkus ruangan |
+| **Jumlah Titik Awan (Point Count)** | **66,734 titik** | 100% Valid (Bebas nilai NaN/Inf) |
+| **Ukuran Berkas PLY** | **14.15 MB** | Format Binary Little-Endian |
+| **Kerapatan Titik Rata-rata** | **465 titik/$\text{m}^2$** | Kerapatan sangat tinggi untuk SLAM |
+| **Volume Ruang Bounding Box** | **257.90 $\text{m}^3$** | Dimensi kotak pembungkus ruangan |
 | **Kanal Warna Terverifikasi** | **True RGB (R, G, B)** | Tekstur nyata material Gazebo |
 | **Vektor Normal Permukaan** | **Ada ($n_x, n_y, n_z$)** | Estimasi orientasi bidang permukaan |
 
@@ -52,9 +52,9 @@ Tabel perbandingan antara ukuran nyata di Gazebo (*Ground Truth*) terhadap hasil
 
 | Dimensi Pengujian | Ground Truth Gazebo | Hasil Rekonstruksi SLAM | Selisih Galat (Error) | Galat Relatif (%) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Panjang Ruangan ($X$)** | 10.00 m | **11.99 m** | **199.4 cm** | **19.94%** |
-| **Lebar Ruangan ($Y$)** | 10.00 m | **11.98 m** | **198.2 cm** | **19.82%** |
-| **Tinggi Dinding ($Z$)** | 1.50 m | **1.80 m** | **29.9 cm** | **19.95%** |
+| **Panjang Ruangan ($X$)** | 10.00 m | **11.98 m** | **197.6 cm** | **19.76%** |
+| **Lebar Ruangan ($Y$)** | 10.00 m | **11.98 m** | **198.0 cm** | **19.80%** |
+| **Tinggi Dinding ($Z$)** | 1.50 m | **1.80 m** | **29.8 cm** | **19.84%** |
 | **Tinggi Meja Belajar ($Z_{table}$)** | 0.75 m | **0.74 m** | **1.0 cm** | **1.33%** |
 
 *Analisis*: Galat dimensi memenuhi standar toleransi sensor navigasi mobile robot bergerak (kecepatan 0.24 m/s).

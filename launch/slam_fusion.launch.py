@@ -19,7 +19,7 @@ def generate_launch_description():
             'use_sim_time': use_sim_time,
             'namespace': '',
             'map_topic': '/map',
-            'rtabmap_args': ('--delete_db_on_start ' if delete_db else '') + '--Grid/RayTracing true --Grid/CellSize 0.05 --Vis/FeatureType 6 --Vis/MaxFeatures 1000 --RGBD/AngularUpdate 0.05 --RGBD/LinearUpdate 0.05 --Rtabmap/DetectionRate 2.0 --Grid/3D true',
+            'rtabmap_args': ('--delete_db_on_start ' if delete_db else '') + '--Grid/FromDepth false --Grid/RayTracing true --Grid/CellSize 0.05 --Vis/FeatureType 6 --Vis/MaxFeatures 1000 --RGBD/AngularUpdate 0.05 --RGBD/LinearUpdate 0.05 --Rtabmap/DetectionRate 2.0 --Grid/3D true',
             'frame_id': 'base_footprint',
             'odom_frame_id': 'odom',
             'map_frame_id': 'map',

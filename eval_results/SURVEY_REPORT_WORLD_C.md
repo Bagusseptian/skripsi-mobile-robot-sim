@@ -11,7 +11,7 @@ Pengujian mandiri menggunakan algoritma *Smooth Continuous Gap-Seeking* menghasi
 
 * **Status Rekonstruksi**: **BERHASIL (High Fidelity)**
 * **Total Titik 3D Valid**: **77,640 titik** (Pembersihan derau menggunakan CloudCompare SOR Filter $k=20, \sigma=2.0$).
-* **Tingkat Cakupan Area (Coverage)**: **80.7%** dari area navigasi bersih.
+* **Tingkat Cakupan Area (Coverage)**: **52.5%** dari area navigasi bersih.
 * **Rata-rata Error Dimensi**: **19.90%** terhadap ukuran *Ground Truth* Gazebo.
 
 ---
@@ -21,12 +21,12 @@ Pengolahan data 2D diturunkan dari pesan `/map` Nav2 standar biner dengan resolu
 
 | Parameter Kartografi | Nilai Terukur | Satuan / Keterangan |
 | :--- | :--- | :--- |
-| **Dimensi Grid Peta** | 259 × 220 | piksel |
-| **Rentang Spasial Nyata** | 12.95 × 11.00 | meter (X × Y) |
-| **Luas Area Navigasi Bebas (Free Space)** | **74.46** | $\text{m}^2$ (Area aman dilalui robot) |
-| **Luas Jejak Rintangan (Obstacle Footprint)** | **3.03** | $\text{m}^2$ (Meja kelas + Dinding keliling) |
-| **Jumlah Klaster Rintangan Terdeteksi** | **8** | Klaster terpisah (6 Meja + 4 Dinding) |
-| **Tingkat Kelengkapan Ruangan** | **80.7%** | Dibandingkan luas bebas ideal ($92.3\text{ m}^2$) |
+| **Dimensi Grid Peta** | 257 × 217 | piksel |
+| **Rentang Spasial Nyata** | 12.85 × 10.85 | meter (X × Y) |
+| **Luas Area Navigasi Bebas (Free Space)** | **48.50** | $\text{m}^2$ (Area aman dilalui robot) |
+| **Luas Jejak Rintangan (Obstacle Footprint)** | **0.87** | $\text{m}^2$ (Meja kelas + Dinding keliling) |
+| **Jumlah Klaster Rintangan Terdeteksi** | **0** | Klaster terpisah (6 Meja + 4 Dinding) |
+| **Tingkat Kelengkapan Ruangan** | **52.5%** | Dibandingkan luas bebas ideal ($92.3\text{ m}^2$) |
 | **Format Artefak Tersimpan** | `.pgm` (P5 Binary) & `.yaml` | Kompatibel Nav2 Map Server |
 
 *Visualisasi 2D resolusi tinggi tersimpan pada berkas: `peta_2d_advanced_survey.png`.*

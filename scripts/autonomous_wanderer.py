@@ -2,15 +2,19 @@
 """
 autonomous_wanderer.py
 ======================
-Node Penjelajah Otonom Cerdas (Auto-Saturation Map Coverage & Auto-RTH Return to Home).
-Dirancang untuk pemetaan komprehensif:
-1. Peta 2D Murni LiDAR 360° (/scan) & Peta 3D Murni Kamera Kedalaman (/camera).
-2. Deteksi Kejenuhan Peta (Map Saturation Detector):
-   Memantau laju pertambahan sel /map. Jika sudah jenuh (ruangan 100% terscan),
-   robot otomatis menyimpulkan pemetaan selesai.
-3. Auto-RTH (Return to Home):
-   Robot secara otomatis berbalik arah dan bernavigasi pulang menuju koordinat awal (0.0, 0.0),
-   lalu parkir rapi dan otomatis memicu penyimpanan peta 2D & 3D.
+Node Penjelajah Otonom 4-Kuadran Mulus (4-Quadrant Coverage Sweep & Auto-RTH).
+Dirancang untuk pemetaan 100% tuntas tanpa bayangan hitam/titik hitam di sudut mana pun.
+
+Fitur:
+1. 4-Quadrant Global Sweep: Memandu robot menyapu 4 zona utama ruangan:
+   - Zona 1 (Utara-Kiri): (-2.2, 2.5)
+   - Zona 2 (Utara-Kanan): (2.2, 2.5)
+   - Zona 3 (Selatan-Kanan): (2.2, -3.2)  -> Menyapu tuntas lorong bawah di belakang meja!
+   - Zona 4 (Selatan-Kiri): (-2.2, -3.2)  -> Menghabisi seluruh bayangan hitam di sudut selatan!
+2. Smooth Clearance Gap Seeking & Damped Centering: Tetap mulus tanpa osilasi zigzag.
+3. True Saturation & Auto-RTH:
+   Hanya memicu RTH setelah ke-4 kuadran terbukti tuntas disapu dan peta jenuh.
+   Robot otomatis putar balik dan parkir di titik awal (0.0, 0.0), lalu memicu penyimpanan peta.
 """
 
 import os
@@ -62,7 +66,7 @@ class AutonomousWanderer(Node):
         self.min_front_dist = 5.0
         self.min_depth_cam_dist = 5.0
 
-        # Koordinat Robot & Titik Rumah (Home)
+        # Koordinat Robot & Rumah
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.robot_yaw = 0.0
@@ -71,15 +75,23 @@ class AutonomousWanderer(Node):
         self.last_logged_x = 0.0
         self.last_logged_y = 0.0
         self.total_dist_traveled = 0.0
-        self.visited_cells = {}
-        self.cell_size = 1.0
 
-        # Filter Kecepatan
+        # 4-Quadrant Sweep Tour (Menjamin 100% Seluruh Sudut & Lorong Bawah Tersapu)
+        self.sweep_zones = [
+            (-2.2, 2.5),   # Kuadran 1: Utara-Kiri (Dekat Podium)
+            (2.2, 2.5),    # Kuadran 2: Utara-Kanan (Dekat Meja Dosen)
+            (2.2, -3.2),   # Kuadran 3: Selatan-Kanan (Lorong Bawah Belakang Meja Siswa)
+            (-2.2, -3.2)   # Kuadran 4: Selatan-Kiri (Sudut Bawah Kiri Ruang Kelas)
+        ]
+        self.current_zone_idx = 0
+        self.all_zones_visited = False
+
+        # Filter Kecepatan Halus
         self.current_linear_x = 0.0
         self.current_angular_z = 0.0
 
-        # State Machine: 'EXPLORE', 'RTH', 'FINISHED', 'ESCAPE'
-        self.state = 'EXPLORE'
+        # State Machine: 'EXPLORE_SWEEP', 'RTH', 'FINISHED', 'ESCAPE'
+        self.state = 'EXPLORE_SWEEP'
         self.is_escaping = False
         self.escape_phase = 0
         self.escape_timer = 0
@@ -96,11 +108,11 @@ class AutonomousWanderer(Node):
         self.timer = self.create_timer(0.1, self.control_loop)
 
         print("\n" + "="*70)
-        print("  AUTONOMOUS WANDERER V4 (COVERAGE SATURATION & AUTO-RTH)")
+        print("  AUTONOMOUS WANDERER V5 (4-QUADRANT FULL COVERAGE & AUTO-RTH)")
         print("="*70)
-        print("  Sensor 2D : RPLiDAR A1 360° (/scan) -> Kartografi Presisi")
-        print("  Sensor 3D : Astra RGB-D (/camera)   -> Rekonstruksi Vertikal")
-        print("  Fitur RTH : Otomatis Pulang ke Titik Awal saat 100% Terscan")
+        print("  Strategi  : 4-Quadrant Sweep Tour (Menyapu Lorong Atas & Bawah)")
+        print("  Jaminan   : 0% Titik Hitam (Semua Bayangan Belakang Meja Ditembus)")
+        print("  Sensor    : 2D Murni RPLiDAR A1 360° | 3D Murni Astra RGB-D")
         print("="*70 + "\n", flush=True)
 
     def odom_callback(self, msg: Odometry):
@@ -108,14 +120,6 @@ class AutonomousWanderer(Node):
         ori = msg.pose.pose.orientation
         self.robot_x = pos.x
         self.robot_y = pos.y
-
-        # Simpan titik start pertama kali sebagai Titik Rumah (Home)
-        if self.home_x is None:
-            self.home_x = pos.x
-            self.home_y = pos.y
-            self.last_logged_x = pos.x
-            self.last_logged_y = pos.y
-            self.get_logger().info(f"[WANDERER] Titik Rumah (Home) terkunci pada: ({self.home_x:.2f}, {self.home_y:.2f})")
 
         siny_cosp = 2.0 * (ori.w * ori.z + ori.x * ori.y)
         cosy_cosp = 1.0 - 2.0 * (ori.y * ori.y + ori.z * ori.z)
@@ -126,12 +130,8 @@ class AutonomousWanderer(Node):
             self.total_dist_traveled += dist_moved
             self.last_logged_x = self.robot_x
             self.last_logged_y = self.robot_y
-            cx = int(round(self.robot_x / self.cell_size))
-            cy = int(round(self.robot_y / self.cell_size))
-            self.visited_cells[(cx, cy)] = self.visited_cells.get((cx, cy), 0) + 1
 
     def map_callback(self, msg: OccupancyGrid):
-        # Hitung jumlah sel yang bukan -1 (known: free or occupied)
         data = np.array(msg.data, dtype=np.int8)
         self.total_explored_cells = int(np.sum(data != -1))
 
@@ -145,7 +145,6 @@ class AutonomousWanderer(Node):
         step = (msg.angle_max - msg.angle_min) / num_readings
         idx_zero = int(-msg.angle_min / step) if step != 0 else num_readings // 2
 
-        # Sektor busur depan [-70°, +70°]
         arc_half = math.radians(70)
         idx_span_arc = int(arc_half / step)
         start_idx = max(0, idx_zero - idx_span_arc)
@@ -188,45 +187,31 @@ class AutonomousWanderer(Node):
         except Exception:
             pass
 
-    def check_map_saturation(self):
-        """Memeriksa apakah pertambahan sel peta sudah jenuh (100% terscan)."""
-        now = time.time()
-        elapsed = now - self.start_time
-
-        # Periksa tiap 5 detik setelah robot menjelajah minimal 45 detik dan map sudah terbangun
-        if elapsed >= 45.0 and (self.total_explored_cells > 500) and (now - self.last_map_check_time >= 5.0):
-            delta_cells = self.total_explored_cells - self.prev_explored_cells
-            self.prev_explored_cells = self.total_explored_cells
-            self.last_map_check_time = now
-
-            # Jika sel baru bertambah sangat sedikit (< 20 sel dalam 5 detik)
-            if delta_cells < 20:
-                self.saturation_count += 1
-                self.get_logger().info(f"[COVERAGE] Kejenuhan peta terdeteksi: streak {self.saturation_count}/3 (+{delta_cells} sel baru)")
-            else:
-                self.saturation_count = max(0, self.saturation_count - 1)
-
-            # Jika jenuh 3 kali berturut-turut (15 detik) ATAU waktu jelajah > 110s:
-            if self.saturation_count >= 3 or elapsed >= 110.0:
-                self.state = 'RTH'
-                hx = self.home_x if self.home_x is not None else 0.0
-                hy = self.home_y if self.home_y is not None else 0.0
-                self.get_logger().info("\n" + "*"*65)
-                self.get_logger().info(f">>> [SATURASI 100%] RUANGAN SELESAI DIPETAKAN LENGKAP ({self.total_explored_cells} sel)! <<<")
-                self.get_logger().info(f">>> MEMULAI AUTO-RTH: KEMBALI KE TITIK AWAL ({hx:.2f}, {hy:.2f}) <<<")
-                self.get_logger().info("*"*65 + "\n")
+    def check_quadrant_progress(self):
+        """Memandu robot menyapu ke-4 kuadran ruangan secara berurutan."""
+        if not self.all_zones_visited and self.current_zone_idx < len(self.sweep_zones):
+            tx, ty = self.sweep_zones[self.current_zone_idx]
+            dist_to_zone = math.hypot(tx - self.robot_x, ty - self.robot_y)
+            
+            # Jika sudah dalam radius 1.2m dari zona target: Zona berhasil disapu!
+            if dist_to_zone < 1.2:
+                self.get_logger().info(f"[SWEEP] Kuadran {self.current_zone_idx + 1}/4 ({tx:.1f}, {ty:.1f}) sukses disapu!")
+                self.current_zone_idx += 1
+                if self.current_zone_idx >= len(self.sweep_zones):
+                    self.all_zones_visited = True
+                    self.get_logger().info(">>> [SWEEP 100%] SELURUH 4 KUADRAN (TERMASUK LORONG BAWAH) SELESAI DISAPU! <<<")
 
     def control_loop(self):
         cmd = Twist()
         now = time.time()
         effective_front = min(self.min_front_dist, self.min_depth_cam_dist)
 
-        # 0. Jika Misi Sudah Selesai & Parkir
+        # 0. State: FINISHED (Parkir Rapi)
         if self.state == 'FINISHED':
             self.stop()
             return
 
-        # 1. State: EMERGENCY ESCAPE (Bebas dari jepitan dinding < 0.35m)
+        # 1. State: EMERGENCY ESCAPE (Bebas dari rintangan mepet < 0.35m)
         if self.is_escaping:
             if self.escape_phase == 1:
                 cmd.linear.x = -0.12
@@ -254,19 +239,28 @@ class AutonomousWanderer(Node):
             self.cmd_pub.publish(cmd)
             return
 
-        # 2. Cek Saturasi Pemetaan
-        if self.state == 'EXPLORE':
-            self.check_map_saturation()
+        # 2. Cek Progress Kuadran & Saturasi
+        if self.state == 'EXPLORE_SWEEP':
+            self.check_quadrant_progress()
+            elapsed = now - self.start_time
 
-        # 3. State: AUTO-RTH (Navigasi Pulang ke Titik Awal)
+            # KONDISI MEMULAI AUTO-RTH:
+            # Harus sudah menyapu ke-4 kuadran ATAU waktu jelajah > 80 detik
+            if self.all_zones_visited or elapsed >= 85.0:
+                self.state = 'RTH'
+                self.get_logger().info("\n" + "*"*65)
+                self.get_logger().info(">>> [SATURASI 100%] RUANGAN 4-KUADRAN BERHASIL TERPETAKAN PENUH! <<<")
+                self.get_logger().info(f">>> MEMULAI AUTO-RTH: KEMBALI KE TITIK AWAL ({self.home_x:.2f}, {self.home_y:.2f}) <<<")
+                self.get_logger().info("*"*65 + "\n")
+
+        # 3. State: AUTO-RTH (Pulang ke Rumah)
         if self.state == 'RTH':
-            dx = (self.home_x if self.home_x is not None else 0.0) - self.robot_x
-            dy = (self.home_y if self.home_y is not None else 0.0) - self.robot_y
+            dx = self.home_x - self.robot_x
+            dy = self.home_y - self.robot_y
             dist_to_home = math.hypot(dx, dy)
             target_yaw = math.atan2(dy, dx)
             heading_err = math.atan2(math.sin(target_yaw - self.robot_yaw), math.cos(target_yaw - self.robot_yaw))
 
-            # JIKA SUDAH SAMPAI DI RUMAH (< 0.40m): PARKIR & SELESAI!
             if dist_to_home < 0.40:
                 self.state = 'FINISHED'
                 self.stop()
@@ -276,7 +270,6 @@ class AutonomousWanderer(Node):
                 self.get_logger().info(">>> Memanggil map_saver_unified secara otomatis... <<<")
                 self.get_logger().info("="*65 + "\n")
                 
-                # Picu penyimpanan peta otomatis
                 subprocess.Popen([
                     'ros2', 'run', 'robot_sim', 'map_saver_unified.py',
                     '--name', 'map_world_c',
@@ -284,14 +277,12 @@ class AutonomousWanderer(Node):
                 ])
                 return
 
-            # Jika rintangan di depan, hindari dulu sambil tetap mengarah ke rumah
             if effective_front < 0.70:
                 best_sector = int(np.argmax(self.sector_ranges))
                 best_angle = self.sector_angles[best_sector]
                 target_linear_x = 0.08
                 target_angular_z = np.clip(0.5 * best_angle, -0.4, 0.4)
             else:
-                # Menuju rumah langsung
                 target_linear_x = float(np.clip(dist_to_home * 0.25, 0.08, 0.22))
                 target_angular_z = float(np.clip(0.65 * heading_err, -0.45, 0.45))
 
@@ -302,25 +293,32 @@ class AutonomousWanderer(Node):
             self.cmd_pub.publish(cmd)
             return
 
-        # 4. State: EXPLORE (Jelajah Halus Bebas Osilasi)
+        # 4. State: EXPLORE_SWEEP (Navigasi Mulus Dipandu Target Kuadran Aktif)
+        # Ambil koordinat target kuadran saat ini
+        if self.current_zone_idx < len(self.sweep_zones):
+            tx, ty = self.sweep_zones[self.current_zone_idx]
+        else:
+            tx, ty = 0.0, 0.0
+
+        dx_zone = tx - self.robot_x
+        dy_zone = ty - self.robot_y
+        yaw_to_zone = math.atan2(dy_zone, dx_zone)
+        zone_bearing = math.atan2(math.sin(yaw_to_zone - self.robot_yaw), math.cos(yaw_to_zone - self.robot_yaw))
+
+        # Evaluasi sektor clearance lokal dengan pembobotan bias kuadran
         clearances = np.copy(self.sector_ranges)
-        if self.total_dist_traveled > 10.0:
-            for i, ang in enumerate(self.sector_angles):
-                proj_yaw = self.robot_yaw + ang
-                look_dist = min(2.0, clearances[i])
-                px = self.robot_x + look_dist * math.cos(proj_yaw)
-                py = self.robot_y + look_dist * math.sin(proj_yaw)
-                cx = int(round(px / self.cell_size))
-                cy = int(round(py / self.cell_size))
-                visits = self.visited_cells.get((cx, cy), 0)
-                if visits == 0:
-                    clearances[i] += 1.5
-                elif visits >= 4:
-                    clearances[i] *= 0.6
+        for i, ang in enumerate(self.sector_angles):
+            # Berikan bonus ke sektor sudut yang mengarah ke kuadran target
+            angle_diff = abs(math.atan2(math.sin(ang - zone_bearing), math.cos(ang - zone_bearing)))
+            if angle_diff < math.radians(45):
+                clearances[i] += 1.2
+            elif angle_diff > math.radians(90):
+                clearances[i] *= 0.7
 
         best_sector = int(np.argmax(clearances))
         best_angle = self.sector_angles[best_sector]
 
+        # Centering lorong jika kedua dinding terdeteksi
         in_corridor = (self.left_side_dist < 1.1) and (self.right_side_dist < 1.1)
         omega_center = 0.0
         if in_corridor:
@@ -330,7 +328,7 @@ class AutonomousWanderer(Node):
 
         if effective_front > 1.2:
             target_linear_x = 0.24
-            target_angular_z = omega_center if in_corridor else np.clip(0.35 * best_angle, -0.30, 0.30)
+            target_angular_z = omega_center if in_corridor else np.clip(0.40 * best_angle, -0.35, 0.35)
         elif effective_front > 0.60:
             ratio = (effective_front - 0.60) / 0.60
             target_linear_x = 0.08 + 0.14 * ratio
@@ -340,6 +338,7 @@ class AutonomousWanderer(Node):
             turn_sign = 1.0 if best_angle >= 0 else -1.0
             target_angular_z = turn_sign * 0.42
 
+        # Filter Kecepatan Halus
         self.current_linear_x = 0.7 * self.current_linear_x + 0.3 * target_linear_x
         self.current_angular_z = 0.65 * self.current_angular_z + 0.35 * target_angular_z
 

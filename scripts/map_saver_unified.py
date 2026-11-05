@@ -2,18 +2,23 @@
 """
 map_saver_unified.py
 ====================
-Node Penyimpan Peta Terpadu 2D dan 3D (Unified 2D/3D Map Exporter).
+Node Penyimpan Peta Terpadu 2D & 3D (Unified 2D/3D Map Exporter V2).
 Fungsi:
 1. Menyimpan Peta 2D Occupancy Grid (/map) -> .pgm (P5 binary) + .yaml (Nav2 standard).
-2. Menyimpan Peta 3D Point Cloud (/cloud_map atau /camera/points) -> .ply (Binary Little-Endian) dan .pcd.
-3. Fallback cerdas: Jika hanya mode LiDAR aktif, mengekstrusi 2D grid menjadi model 3D voxel point cloud (.ply).
+2. Menyimpan Peta 3D Dense RGB-D Point Cloud:
+   - Prioritas 1: Ekspor langsung dari database RTAB-Map (~/.ros/rtabmap.db via rtabmap-export).
+   - Prioritas 2: Topik /cloud_map dengan QoS TRANSIENT_LOCAL (latched).
+   - Prioritas 3: Topik /octomap_occupied_space atau /camera/points (BEST_EFFORT).
+   - Format: .ply (Binary Little-Endian dengan warna RGB) dan .pcd.
 Dapat dieksekusi standalone via ROS 2 CLI:
-ros2 run robot_sim map_saver_unified.py --name map_world_a --output-dir ~/skripsi_ws/maps
+ros2 run robot_sim map_saver_unified.py --name map_world_c --output-dir ~/skripsi_ws/maps
 """
 
 import os
 import sys
 import time
+import shutil
+import subprocess
 import argparse
 import numpy as np
 
@@ -24,7 +29,7 @@ from nav_msgs.msg import OccupancyGrid
 from sensor_msgs.msg import PointCloud2
 
 class UnifiedMapSaver(Node):
-    def __init__(self, map_name, output_dir, timeout_sec=10.0):
+    def __init__(self, map_name, output_dir, timeout_sec=12.0):
         super().__init__('map_saver_unified')
         self.map_name = map_name
         self.output_dir = os.path.expanduser(output_dir)
@@ -34,20 +39,29 @@ class UnifiedMapSaver(Node):
 
         self.map_msg = None
         self.cloud_msg = None
+        self.camera_points_msg = None
 
-        # QoS for latched /map
-        map_qos = QoSProfile(depth=1)
-        map_qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
-        map_qos.reliability = ReliabilityPolicy.RELIABLE
+        # QoS TRANSIENT_LOCAL + RELIABLE untuk topik latched RTAB-Map
+        latched_qos = QoSProfile(depth=1)
+        latched_qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
+        latched_qos.reliability = ReliabilityPolicy.RELIABLE
+
+        # QoS BEST_EFFORT untuk Gazebo camera points
+        best_effort_qos = QoSProfile(depth=5)
+        best_effort_qos.durability = DurabilityPolicy.VOLATILE
+        best_effort_qos.reliability = ReliabilityPolicy.BEST_EFFORT
 
         self.sub_map = self.create_subscription(
-            OccupancyGrid, '/map', self.map_callback, map_qos
+            OccupancyGrid, '/map', self.map_callback, latched_qos
         )
         self.sub_cloud_map = self.create_subscription(
-            PointCloud2, '/cloud_map', self.cloud_callback, 10
+            PointCloud2, '/cloud_map', self.cloud_callback, latched_qos
+        )
+        self.sub_octomap = self.create_subscription(
+            PointCloud2, '/octomap_occupied_space', self.cloud_callback, latched_qos
         )
         self.sub_camera_points = self.create_subscription(
-            PointCloud2, '/camera/points', self.camera_points_callback, 10
+            PointCloud2, '/camera/points', self.camera_points_callback, best_effort_qos
         )
 
         self.get_logger().info(f'[UNIFIED_MAP_SAVER] Listening for /map and 3D point cloud...')
@@ -61,10 +75,11 @@ class UnifiedMapSaver(Node):
     def cloud_callback(self, msg: PointCloud2):
         if msg.width * msg.height > 0:
             self.cloud_msg = msg
+            self.get_logger().info(f'[UNIFIED_MAP_SAVER] Received 3D cloud: {msg.width * msg.height} points')
 
     def camera_points_callback(self, msg: PointCloud2):
-        if self.cloud_msg is None and (msg.width * msg.height > 0):
-            self.cloud_msg = msg
+        if msg.width * msg.height > 0:
+            self.camera_points_msg = msg
 
     def save_2d_map(self):
         if self.map_msg is None:
@@ -124,9 +139,7 @@ class UnifiedMapSaver(Node):
         total = msg.width * msg.height
         data = bytes(msg.data)
 
-        # Fast extraction using NumPy structured arrays
         x_off, y_off, z_off = fields['x'], fields['y'], fields['z']
-        
         dtype_list = [('x', '<f4'), ('y', '<f4'), ('z', '<f4')]
         offsets = [x_off, y_off, z_off]
 
@@ -136,7 +149,6 @@ class UnifiedMapSaver(Node):
             dtype_list.append(('rgb', '<u4'))
             offsets.append(c_off)
 
-        # Create structured dtype with correct itemsize
         structured_dtype = np.dtype({
             'names': [d[0] for d in dtype_list],
             'formats': [d[1] for d in dtype_list],
@@ -146,8 +158,10 @@ class UnifiedMapSaver(Node):
 
         arr = np.frombuffer(data, dtype=structured_dtype, count=total)
 
-        # Filter NaNs and Infs
         valid = np.isfinite(arr['x']) & np.isfinite(arr['y']) & np.isfinite(arr['z'])
+        # Also filter out extreme noise points
+        valid &= (np.abs(arr['x']) < 50.0) & (np.abs(arr['y']) < 50.0) & (np.abs(arr['z']) < 20.0)
+
         valid_arr = arr[valid]
         n_pts = len(valid_arr)
         if n_pts == 0:
@@ -163,7 +177,6 @@ class UnifiedMapSaver(Node):
             g = ((rgb_uint >> 8) & 0xFF).astype(np.uint8)
             b = (rgb_uint & 0xFF).astype(np.uint8)
         else:
-            # Color by height (z)
             z_norm = (z - z.min()) / max((z.max() - z.min()), 1e-4)
             r = (np.clip(z_norm * 255, 0, 255)).astype(np.uint8)
             g = (np.clip((1.0 - np.abs(z_norm - 0.5) * 2.0) * 255, 0, 255)).astype(np.uint8)
@@ -172,14 +185,43 @@ class UnifiedMapSaver(Node):
         return x, y, z, r, g, b
 
     def save_3d_map(self):
+        ply_path = os.path.join(self.output_dir, f'{self.map_name}_3d.ply')
+        pcd_path = os.path.join(self.output_dir, f'{self.map_name}_3d.pcd')
+
+        # STRATEGI 1: Ekspor langsung dari database RTAB-Map
+        rtabmap_db = os.path.expanduser('~/.ros/rtabmap.db')
+        if os.path.exists(rtabmap_db) and os.path.getsize(rtabmap_db) > 100000:
+            self.get_logger().info(f'[UNIFIED_MAP_SAVER] Attempting direct rtabmap-export from {rtabmap_db}...')
+            cmd = [
+                'bash', '-c',
+                f'source /opt/ros/humble/setup.bash && rtabmap-export --cloud --opt 2 --output_dir "{self.output_dir}" --output "{self.map_name}_3d" "{rtabmap_db}" 2>/dev/null'
+            ]
+            try:
+                res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=12)
+                possible_ply = [
+                    os.path.join(self.output_dir, f'{self.map_name}_3d_cloud.ply'),
+                    os.path.join(self.output_dir, f'{self.map_name}_3d.ply')
+                ]
+                for p_ply in possible_ply:
+                    if os.path.exists(p_ply) and os.path.getsize(p_ply) > 10000:
+                        if p_ply != ply_path:
+                            shutil.move(p_ply, ply_path)
+                        self.get_logger().info(f'[UNIFIED_MAP_SAVER] High-density RGB-D PLY exported via rtabmap-export: {ply_path} ({os.path.getsize(ply_path):,} bytes)')
+                        return True
+            except Exception as e:
+                self.get_logger().warn(f'[UNIFIED_MAP_SAVER] rtabmap-export attempt skipped: {e}')
+
+        # STRATEGI 2: Ekstraksi dari topik PointCloud2 (/cloud_map atau /camera/points)
         pts_data = None
         if self.cloud_msg is not None:
             pts_data = self._unpack_pointcloud2(self.cloud_msg)
+        elif self.camera_points_msg is not None:
+            pts_data = self._unpack_pointcloud2(self.camera_points_msg)
 
-        # Fallback: jika cloud_msg belum ada, ekstrusi 2D map menjadi 3D voxels
+        # STRATEGI 3: Fallback ke ekstrusi 2D map jika SLAM point cloud belum terinisialisasi
         if pts_data is None:
             if self.map_msg is not None:
-                self.get_logger().info('[UNIFIED_MAP_SAVER] Generating 3D extrusions from 2D Occupancy Grid...')
+                self.get_logger().info('[UNIFIED_MAP_SAVER] Generating 3D voxels from 2D Occupancy Grid...')
                 width = self.map_msg.info.width
                 height = self.map_msg.info.height
                 res = self.map_msg.info.resolution
@@ -192,14 +234,12 @@ class UnifiedMapSaver(Node):
                     px = ox + occupied_indices[:, 1] * res
                     py = oy + occupied_indices[:, 0] * res
                     
-                    # Extrude along Z from 0 to 1.5m at 0.1m step
-                    z_levels = np.linspace(0.0, 1.5, 16)
+                    z_levels = np.linspace(0.0, 1.8, 19)
                     all_x = np.repeat(px, len(z_levels))
                     all_y = np.repeat(py, len(z_levels))
                     all_z = np.tile(z_levels, len(px))
                     
-                    # Color walls teal/cyan
-                    all_r = np.full(len(all_x), 30, dtype=np.uint8)
+                    all_r = np.full(len(all_x), 40, dtype=np.uint8)
                     all_g = np.full(len(all_x), 180, dtype=np.uint8)
                     all_b = np.full(len(all_x), 220, dtype=np.uint8)
                     pts_data = (all_x.astype(np.float32), all_y.astype(np.float32), all_z.astype(np.float32), all_r, all_g, all_b)
@@ -211,10 +251,7 @@ class UnifiedMapSaver(Node):
         x, y, z, r, g, b = pts_data
         n_pts = len(x)
 
-        ply_path = os.path.join(self.output_dir, f'{self.map_name}_3d.ply')
-        pcd_path = os.path.join(self.output_dir, f'{self.map_name}_3d.pcd')
-
-        # Write Binary Little-Endian PLY
+        # Tulis Binary Little-Endian PLY
         ply_header = (
             f"ply\n"
             f"format binary_little_endian 1.0\n"
@@ -244,7 +281,7 @@ class UnifiedMapSaver(Node):
             f.write(ply_header)
             f.write(ply_arr.tobytes())
 
-        # Write ASCII PCD (Standard Point Cloud Data)
+        # Tulis PCD
         with open(pcd_path, 'w') as f:
             f.write("# .PCD v0.7 - Point Cloud Data file format\n")
             f.write("VERSION 0.7\n")
@@ -257,8 +294,7 @@ class UnifiedMapSaver(Node):
             f.write("VIEWPOINT 0 0 0 1 0 0 0\n")
             f.write(f"POINTS {n_pts}\n")
             f.write("DATA ascii\n")
-            # Downsample if too large for ASCII PCD (keep max 15000 pts for fast text write)
-            step_skip = max(1, n_pts // 15000)
+            step_skip = max(1, n_pts // 20000)
             for i in range(0, n_pts, step_skip):
                 rgb_packed = (int(r[i]) << 16) | (int(g[i]) << 8) | int(b[i])
                 f.write(f"{x[i]:.4f} {y[i]:.4f} {z[i]:.4f} {rgb_packed}\n")
@@ -269,12 +305,11 @@ class UnifiedMapSaver(Node):
         return True
 
 def main():
-    parser = argparse.ArgumentParser(description='Unified 2D and 3D Map Exporter')
+    parser = argparse.ArgumentParser(description='Unified 2D and 3D Map Exporter V2')
     parser.add_argument('--name', type=str, default='map_unified', help='Base name for map files')
     parser.add_argument('--output-dir', type=str, default=os.path.expanduser('~/skripsi_ws/maps'), help='Output directory')
-    parser.add_argument('--timeout', type=float, default=10.0, help='Max timeout seconds to wait for map data')
+    parser.add_argument('--timeout', type=float, default=12.0, help='Max timeout seconds to wait for map data')
     
-    # Strip ROS arguments
     raw_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(raw_args)
 
@@ -283,17 +318,14 @@ def main():
 
     start_time = time.time()
 
-    # Wait until map arrives or timeout
     while rclpy.ok():
         rclpy.spin_once(node, timeout_sec=0.2)
-        if node.map_msg is not None:
-            # Wait additional 2 seconds to capture dense 3D points if available
-            time.sleep(1.5)
+        if node.map_msg is not None and (node.cloud_msg is not None or node.camera_points_msg is not None):
+            time.sleep(1.0)
             for _ in range(5):
                 rclpy.spin_once(node, timeout_sec=0.2)
             break
         if time.time() - start_time > args.timeout:
-            node.get_logger().error(f'[UNIFIED_MAP_SAVER] Timeout ({args.timeout}s) waiting for /map!')
             break
 
     saved_2d = node.save_2d_map()
@@ -303,7 +335,7 @@ def main():
     rclpy.shutdown()
 
     if saved_2d and saved_3d:
-        print(f"\n>>> [SUCCESS] All map formats (2D .pgm/.yaml and 3D .ply/.pcd) saved for '{args.name}' <<<\n")
+        print(f"\n>>> [SUCCESS] All map formats (2D .pgm/.yaml & 3D .ply/.pcd) saved for '{args.name}' <<<\n")
         sys.exit(0)
     else:
         print(f"\n>>> [PARTIAL/WARN] 2D saved: {saved_2d}, 3D saved: {saved_3d} <<<\n")

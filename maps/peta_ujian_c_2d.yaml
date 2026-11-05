@@ -1,0 +1,7 @@
+image: peta_ujian_c_2d.pgm
+mode: trinary
+resolution: 0.050000
+origin: [-6.572448, -5.560612, 0.000000]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.25

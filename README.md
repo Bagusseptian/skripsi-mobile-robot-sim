@@ -33,6 +33,7 @@ robot_sim/
 │   └── rviz_sim.launch.py            # Visualisasi inspeksi sensor di RViz2
 ├── rviz/
 │   ├── nav2_view.rviz                # Profil tampilan navigasi Nav2
+│   ├── slam_fusion.rviz              # Profil tampilan Fusi SLAM (LiDAR, PointCloud, Peta 2D/3D)
 │   ├── slam_lidar.rviz               # Profil tampilan RViz untuk LiDAR SLAM
 │   └── view_all_sensors.rviz         # Profil inspeksi seluruh aliran sensor
 ├── scripts/
@@ -97,14 +98,17 @@ ros2 launch robot_sim sim.launch.py world:=world_c
 > * `world_b` : Lorong sirkuit panjang dengan sudut 90°
 > * `world_a` : Arena uji dasar 8x8 meter
 
-#### **Terminal 2: Jalankan Fusi Visual SLAM (RTAB-Map)**
+#### **Terminal 2: Jalankan Fusi Visual SLAM (RTAB-Map + RViz2)**
 ```bash
 cd ~/skripsi_ws
 source /opt/ros/humble/setup.bash
 source install/setup.bash
 ros2 launch robot_sim slam_fusion.launch.py
 ```
-*(Jendela `rtabmap_viz` akan terbuka menampilkan rekonstruksi 3D point cloud padat dan grid peta 2D secara real-time).*
+*(Jendela **RViz2** akan terbuka otomatis menampilkan model robot, pindaian 360° LiDAR hijau, point cloud warna 3D live kamera, occupancy grid peta 2D `/map`, dan rekaman dense point cloud 3D RTAB-Map).*  
+> **Tips:**
+> * Jika ingin membuka antarmuka bawaan RTAB-Map secara terpisah: tambahkan `rtabmap_viz:=true`.
+> * Jika ingin membuka RViz2 sejak awal bersama Gazebo di Terminal 1: tambahkan `rviz:=true` pada `sim.launch.py`.
 
 #### **Terminal 3: Jalankan Robot Berjalan Otonom**
 ```bash

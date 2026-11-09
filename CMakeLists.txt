@@ -29,6 +29,7 @@ install(
     scripts/rgbd_spatial_interactive.py
     scripts/autonomous_wanderer.py
     scripts/map_saver_unified.py
+    scripts/labsheet0_rgbd_opencv.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

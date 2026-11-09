@@ -1,21 +1,13 @@
-import os
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('robot_sim')
     use_sim_time = LaunchConfiguration('use_sim_time')
     rtabmap_viz = LaunchConfiguration('rtabmap_viz')
-    open_rviz = LaunchConfiguration('rviz')
     delete_db = LaunchConfiguration('delete_db')
-
-    rviz_config_file = os.path.join(pkg_share, 'rviz', 'slam_fusion.rviz')
 
     # Launch RTAB-Map dengan mode Fusi Sensor Penuh (LiDAR 360° + RGB-D Camera + IMU/Odom)
     # Sesuai diagram arsitektur Bagian 3 & 7 pada Dokumen Perencanaan
@@ -49,28 +41,15 @@ def generate_launch_description():
             'visual_odometry': 'false',
             'odom_topic': '/odom',
 
-            # 4. Antarmuka Visualisasi
+            # 4. Antarmuka Visualisasi RTAB-Map
             'rtabmap_viz': rtabmap_viz,
             'rviz': 'false'
         }.items()
     )
 
-    # Node: RViz2 untuk Visualisasi Fusi SLAM (Robot, LiDAR, PointCloud, Peta 2D/3D)
-    rviz_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        arguments=['-d', rviz_config_file],
-        parameters=[{'use_sim_time': use_sim_time}],
-        condition=IfCondition(open_rviz),
-        output='screen'
-    )
-
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='true', description='Gunakan clock waktu simulasi'),
-        DeclareLaunchArgument('rviz', default_value='true', description='Buka RViz2 otomatis untuk visualisasi SLAM'),
-        DeclareLaunchArgument('rtabmap_viz', default_value='false', description='Buka GUI bawaan RTAB-Map (opsional)'),
+        DeclareLaunchArgument('rtabmap_viz', default_value='true', description='Buka antarmuka grafis rtabmap_viz'),
         DeclareLaunchArgument('delete_db', default_value='true', description='Hapus database peta sebelumnya saat mulai'),
-        rtabmap_launch,
-        rviz_node
+        rtabmap_launch
     ])

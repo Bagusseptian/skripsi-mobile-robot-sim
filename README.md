@@ -30,7 +30,9 @@ robot_sim/
 │   ├── slam_lidar.launch.py          # Peluncur 2D LiDAR SLAM (slam_toolbox) + RViz2
 │   ├── slam_rgbd.launch.py           # Peluncur Visual SLAM RGB-D Murni (RTAB-Map tanpa LiDAR)
 │   ├── nav2.launch.py                # Peluncur Navigasi Otonom Nav2 (Costmap 2D + Voxel Layer 3D)
-│   └── rviz_sim.launch.py            # Visualisasi inspeksi sensor di RViz2
+│   ├── rviz.launch.py                # Peluncur visualisasi RViz2 terpisah (LiDAR, Kamera, PointCloud, Peta)
+│   ├── rviz_sim.launch.py            # Visualisasi inspeksi sensor di RViz2
+│   └── view_sensors.launch.py        # Visualisasi seluruh aliran sensor di RViz2
 ├── rviz/
 │   ├── nav2_view.rviz                # Profil tampilan navigasi Nav2
 │   ├── slam_fusion.rviz              # Profil tampilan Fusi SLAM (LiDAR, PointCloud, Peta 2D/3D)
@@ -98,19 +100,26 @@ ros2 launch robot_sim sim.launch.py world:=world_c
 > * `world_b` : Lorong sirkuit panjang dengan sudut 90°
 > * `world_a` : Arena uji dasar 8x8 meter
 
-#### **Terminal 2: Jalankan Fusi Visual SLAM (RTAB-Map + RViz2)**
+#### **Terminal 2: Jalankan Fusi Visual SLAM (RTAB-Map)**
 ```bash
 cd ~/skripsi_ws
 source /opt/ros/humble/setup.bash
 source install/setup.bash
 ros2 launch robot_sim slam_fusion.launch.py
 ```
-*(Jendela **RViz2** akan terbuka otomatis menampilkan model robot, pindaian 360° LiDAR hijau, point cloud warna 3D live kamera, occupancy grid peta 2D `/map`, dan rekaman dense point cloud 3D RTAB-Map).*  
-> **Tips:**
-> * Jika ingin membuka antarmuka bawaan RTAB-Map secara terpisah: tambahkan `rtabmap_viz:=true`.
-> * Jika ingin membuka RViz2 sejak awal bersama Gazebo di Terminal 1: tambahkan `rviz:=true` pada `sim.launch.py`.
+*(Jendela bawaan `rtabmap_viz` akan terbuka menampilkan rekonstruksi 3D point cloud dan grid peta 2D secara real-time seperti awal).*
 
-#### **Terminal 3: Jalankan Robot Berjalan Otonom**
+#### **Terminal 3 (Opsional Terpisah): Buka RViz2**
+Jika ingin membuka visualisasi **RViz2** secara terpisah di jendela tersendiri:
+```bash
+cd ~/skripsi_ws
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 launch robot_sim rviz.launch.py
+```
+*(Jendela **RViz2** terbuka terpisah menampilkan model robot 3D, pindaian 360° LiDAR hijau, point cloud warna 3D kamera, occupancy grid `/map`, dan 3D dense map).*
+
+#### **Terminal 4: Jalankan Robot Berjalan Otonom**
 ```bash
 cd ~/skripsi_ws
 source /opt/ros/humble/setup.bash
@@ -123,7 +132,7 @@ ros2 run robot_sim autonomous_wanderer.py
 
 ### 3. Kontrol Robot Manual (Teleoperasi WASD)
 
-Jika ingin menyetir robot sendiri (sebagai pengganti Terminal 3):
+Jika ingin menyetir robot sendiri (sebagai pengganti robot berjalan otonom):
 ```bash
 cd ~/skripsi_ws
 source /opt/ros/humble/setup.bash

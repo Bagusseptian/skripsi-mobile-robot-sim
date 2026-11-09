@@ -1,12 +1,11 @@
 import os
-import xacro
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
-from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+import xacro
 
 def launch_setup(context, *args, **kwargs):
     pkg_share = get_package_share_directory('robot_sim')
@@ -18,7 +17,6 @@ def launch_setup(context, *args, **kwargs):
     y_arg = LaunchConfiguration('y').perform(context)
     z_arg = LaunchConfiguration('z').perform(context)
     yaw_arg = LaunchConfiguration('yaw').perform(context)
-    open_rviz = LaunchConfiguration('rviz')
 
     if world_arg in ['world_a', 'basic', 'a']:
         world_file = os.path.join(pkg_share, 'worlds', 'world_a_basic.world')
@@ -80,31 +78,17 @@ def launch_setup(context, *args, **kwargs):
         parameters=[{'use_sim_time': True}]
     )
 
-    # 5. RViz2 (Opsional, bawaan false agar tidak bentrok dengan SLAM)
-    rviz_config_file = os.path.join(pkg_share, 'rviz', 'view_all_sensors.rviz')
-    rviz_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        arguments=['-d', rviz_config_file],
-        parameters=[{'use_sim_time': True}],
-        condition=IfCondition(open_rviz),
-        output='screen'
-    )
-
     return [
         robot_state_publisher,
         gazebo,
         spawn_entity,
-        pid_controller,
-        rviz_node
+        pid_controller
     ]
 
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value='world_a', description='Pilihan dunia simulasi: world_a, world_b, world_c'),
         DeclareLaunchArgument('gui', default_value='true', description='Tampilkan Gazebo GUI'),
-        DeclareLaunchArgument('rviz', default_value='false', description='Buka RViz2 bersamaan dengan Gazebo'),
         DeclareLaunchArgument('x', default_value='0.0', description='Posisi awal spawn X (meter)'),
         DeclareLaunchArgument('y', default_value='0.0', description='Posisi awal spawn Y (meter)'),
         DeclareLaunchArgument('z', default_value='0.05', description='Posisi awal spawn Z (meter)'),
